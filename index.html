@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>৪-১৮-২০৩৫ তারিখ থেকে শুরু কাউন্টআপ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #222;
+      padding: 50px;
+      color: white;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 40px;
+    }
+
+    .count-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background-color: #add8e6;
+      border-radius: 12px;
+      width: 100px;
+      height: 120px;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .calendar-header {
+      background-color: #e74c3c;
+      color: white;
+      padding: 6px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .calendar-number {
+      font-size: 2.5rem;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .label {
+      font-size: 0.85rem;
+      margin-top: 10px;
+      color: #222;
+    }
+
+    .complete-message {
+      font-size: 1.5rem;
+      margin-top: 40px;
+      color: #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>আজ থেকে ১০০০ দিনের কাউন্টআপ</h1>
+
+  <div class="count-container" id="countup">
+    <!-- কাউন্টআপ কার্ডগুলো এখানে আসবে -->
+  </div>
+
+  <div class="complete-message" id="doneMessage"></div>
+
+  <script>
+    // লোকাল স্টোরেজ থেকে startTime নাও, না থাকলে এখন সেট করো
+    let startTime = localStorage.getItem('countupStartTime');
+    if (!startTime) {
+      startTime = new Date().getTime();
+      localStorage.setItem('countupStartTime', startTime);
+    } else {
+      startTime = parseInt(startTime);
+    }
+
+    // শেষ সময় নির্ধারণ: ১০০০ দিন পর
+    const oneDayMs = 1000 * 60 * 60 * 24;
+    const targetTime = startTime + (1000 * oneDayMs);
+
+    function updateCount() {
+      const now = new Date().getTime();
+
+      if (now >= targetTime) {
+        document.getElementById("countup").style.display = 'none';
+        document.getElementById("doneMessage").innerText = "🎉 ১০০০ দিন পূর্ণ হয়েছে!";
+        clearInterval(timer);
+        return;
+      }
+
+      const elapsed = now - startTime;
+
+      const days = Math.floor(elapsed / oneDayMs);
+      const hours = Math.floor((elapsed % oneDayMs) / (1000 * 60 * 60));
+      const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+
+      document.getElementById("countup").innerHTML = `
+        ${createCard(days, "দিন")}
+        ${createCard(hours, "ঘন্টা")}
+        ${createCard(minutes, "মিনিট")}
+        ${createCard(seconds, "সেকেন্ড")}
+      `;
+    }
+
+    function createCard(number, label) {
+      return `
+        <div class="card">
+          <div class="calendar-header">${label}</div>
+          <div class="calendar-number">${number.toString().padStart(2, '0')}</div>
+        </div>
+      `;
+    }
+
+    const timer = setInterval(updateCount, 1000);
+    updateCount(); // প্রথমবার কল
+  </script>
+
+</body>
+</html>
