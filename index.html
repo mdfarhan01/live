@@ -2,42 +2,68 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <title>৪-১৮-২০২৫ তারিখ থেকে শুরু কাউন্টআপ</title>
+  <title>কাউন্টআপ (তারিখ নির্ধারণযোগ্য)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #111;
+      color: #fff;
+      padding: 30px 20px;
       text-align: center;
-      background-color: #222;
-      padding: 50px;
-      color: white;
     }
 
     h1 {
-      font-size: 2rem;
-      margin-bottom: 40px;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .date-input {
+      margin-bottom: 30px;
+    }
+
+    input[type="date"] {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 1rem;
+      background-color: #00b894;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    button:hover {
+      background-color: #019875;
     }
 
     .count-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
     .card {
-      background-color: #add8e6;
+      background-color: #1e1e1e;
       border-radius: 12px;
-      width: 100px;
       height: 120px;
-      position: relative;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
     }
 
     .calendar-header {
-      background-color: #e74c3c;
+      background-color: #00b894;
       color: white;
       padding: 6px;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: bold;
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;
@@ -46,13 +72,7 @@
     .calendar-number {
       font-size: 2.5rem;
       margin-top: 20px;
-      color: #333;
-    }
-
-    .label {
-      font-size: 0.85rem;
-      margin-top: 10px;
-      color: #222;
+      color: #00cec9;
     }
 
     .complete-message {
@@ -60,38 +80,83 @@
       margin-top: 40px;
       color: #00ffcc;
     }
+
+    @media (max-width: 600px) {
+      .count-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .calendar-number {
+        font-size: 2rem;
+        margin-top: 16px;
+      }
+
+      .card {
+        height: 100px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h1>৪-১৮-২০২৫ তারিখ থেকে শুরু কাউন্টআপ</h1>
+  <h1>Never Give Up – Allah is with Me</h1>
+
+  <div class="date-input">
+    <input type="date" id="datePicker">
+    <button onclick="setStartDate()">Start Now</button>
+  </div>
 
   <div class="count-container" id="countup">
-    <!-- কাউন্টআপ কার্ডগুলো এখানে আসবে -->
+    <!-- টাইম কার্ডগুলো এখানে আসবে -->
   </div>
 
   <div class="complete-message" id="doneMessage"></div>
 
   <script>
-    // লোকাল স্টোরেজ থেকে startTime নাও, না থাকলে এখন সেট করো
-    let startTime = localStorage.getItem('countupStartTime');
-    if (!startTime) {
-      startTime = new Date().getTime();
-      localStorage.setItem('countupStartTime', startTime);
+    const oneDayMs = 1000 * 60 * 60 * 24;
+    const limitDays = 10000;
+    let startDate;
+
+    // লোকালস্টোরেজ থেকে শুরু তারিখ নাও
+    if (localStorage.getItem("countupStartDate")) {
+      startDate = new Date(localStorage.getItem("countupStartDate"));
     } else {
-      startTime = parseInt(startTime);
+      // ডিফল্ট শুরু তারিখ: ১৫ এপ্রিল ২০২৫
+      startDate = new Date("2025-04-15T00:00:00");
+      localStorage.setItem("countupStartDate", startDate.toISOString());
     }
 
-    // শেষ সময় নির্ধারণ: ১০০০ দিন পর
-    const oneDayMs = 1000 * 60 * 60 * 24;
-    const targetTime = startTime + (1000 * oneDayMs);
+    document.getElementById("datePicker").value = startDate.toISOString().split('T')[0];
+
+    function setStartDate() {
+      const newDate = document.getElementById("datePicker").value;
+      if (!newDate) return alert("তারিখ নির্বাচন করুন!");
+      startDate = new Date(newDate + "T00:00:00");
+      localStorage.setItem("countupStartDate", startDate.toISOString());
+      updateCount(); // নতুন তারিখে রিসেট
+    }
+
+    function createCard(value, label) {
+      return `
+        <div class="card">
+          <div class="calendar-header">${label}</div>
+          <div class="calendar-number">${value.toString().padStart(2, '0')}</div>
+        </div>
+      `;
+    }
 
     function updateCount() {
       const now = new Date().getTime();
+      const startTime = startDate.getTime();
+      const targetTime = startTime + limitDays * oneDayMs;
 
       if (now >= targetTime) {
         document.getElementById("countup").style.display = 'none';
-        document.getElementById("doneMessage").innerText = "🎉 ১০০০ দিন পূর্ণ হয়েছে!";
+        document.getElementById("doneMessage").innerText = "🎉 ১০,০০০ দিন পূর্ণ হয়েছে!";
         clearInterval(timer);
         return;
       }
@@ -104,24 +169,15 @@
       const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
 
       document.getElementById("countup").innerHTML = `
-        ${createCard(days, "দিন")}
-        ${createCard(hours, "ঘন্টা")}
-        ${createCard(minutes, "মিনিট")}
-        ${createCard(seconds, "সেকেন্ড")}
-      `;
-    }
-
-    function createCard(number, label) {
-      return `
-        <div class="card">
-          <div class="calendar-header">${label}</div>
-          <div class="calendar-number">${number.toString().padStart(2, '0')}</div>
-        </div>
+        ${createCard(days, "Days")}
+        ${createCard(hours, "Hours")}
+        ${createCard(minutes, "Minutes")}
+        ${createCard(seconds, "Seconds")}
       `;
     }
 
     const timer = setInterval(updateCount, 1000);
-    updateCount(); // প্রথমবার কল
+    updateCount();
   </script>
 
 </body>
