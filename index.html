@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>15-04-2025</title>
+  <title>Countup Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -46,9 +46,8 @@
 
     .count-container {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      max-width: 600px;
+      max-width: 900px;
       margin: 0 auto;
     }
 
@@ -81,6 +80,21 @@
       color: #00ffcc;
     }
 
+    /* Responsive layout control */
+    @media (min-width: 601px) {
+      .count-container.four-fields {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .count-container.five-fields {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .count-container.more-than-five {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
     @media (max-width: 600px) {
       .count-container {
         grid-template-columns: repeat(2, 1fr);
@@ -99,6 +113,50 @@
         font-size: 1.4rem;
       }
     }
+
+    /* Improved Pop-up */
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #222;
+      color: #00ffcc;
+      padding: 30px 40px;
+      border: 2px solid #00b894;
+      border-radius: 16px;
+      box-shadow: 0 0 30px #00ffcc88;
+      z-index: 9999;
+      max-width: 90%;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .popup p {
+      margin-bottom: 20px;
+    }
+
+    .popup button {
+      background-color: #00b894;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .popup button:hover {
+      background-color: #019875;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
   </style>
 </head>
 <body>
@@ -110,22 +168,23 @@
     <button onclick="setStartDate()">Start Now</button>
   </div>
 
-  <div class="count-container" id="countup">
-    <!-- টাইম কার্ডগুলো এখানে আসবে -->
-  </div>
+  <div class="count-container" id="countup"></div>
 
   <div class="complete-message" id="doneMessage"></div>
+
+  <div id="popup" class="popup">
+    <p id="popupText">🎉 Milestone reached!</p>
+    <button onclick="closePopup()">Got it</button>
+  </div>
 
   <script>
     const oneDayMs = 1000 * 60 * 60 * 24;
     const limitDays = 10000;
     let startDate;
 
-    // লোকালস্টোরেজ থেকে শুরু তারিখ নাও
     if (localStorage.getItem("countupStartDate")) {
       startDate = new Date(localStorage.getItem("countupStartDate"));
     } else {
-      // ডিফল্ট শুরু তারিখ: ১৫ এপ্রিল ২০২৫
       startDate = new Date("2025-04-15T00:00:00");
       localStorage.setItem("countupStartDate", startDate.toISOString());
     }
@@ -134,10 +193,11 @@
 
     function setStartDate() {
       const newDate = document.getElementById("datePicker").value;
-      if (!newDate) return alert("তারিখ নির্বাচন করুন!");
+      if (!newDate) return alert("Please select a date!");
       startDate = new Date(newDate + "T00:00:00");
       localStorage.setItem("countupStartDate", startDate.toISOString());
-      updateCount(); // নতুন তারিখে রিসেট
+      shownPopups = {};
+      updateCount();
     }
 
     function createCard(value, label) {
@@ -149,6 +209,34 @@
       `;
     }
 
+    let shownPopups = {};
+
+    function showPopup(message) {
+      document.getElementById("popupText").innerText = message;
+      document.getElementById("popup").style.display = "block";
+    }
+
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
+
+    const milestones = [
+      { days: 7, message: "🌟 7 Days Completed! Keep Going!" },
+      { days: 30, message: "🎉 1 Month Completed!" },
+      { days: 60, message: "💪 2 Months Strong!" },
+      { days: 90, message: "🔥 3 Months Completed!" },
+      { days: 365, message: "🏆 1 Year Milestone Achieved!" }
+    ];
+
+    function checkMilestones(days) {
+      milestones.forEach(m => {
+        if (days >= m.days && !shownPopups[m.days]) {
+          shownPopups[m.days] = true;
+          showPopup(m.message);
+        }
+      });
+    }
+
     function updateCount() {
       const now = new Date().getTime();
       const startTime = startDate.getTime();
@@ -156,24 +244,41 @@
 
       if (now >= targetTime) {
         document.getElementById("countup").style.display = 'none';
-        document.getElementById("doneMessage").innerText = "🎉 ১০,০০০ দিন পূর্ণ হয়েছে!";
+        document.getElementById("doneMessage").innerText = "🎉 10,000 days completed!";
         clearInterval(timer);
         return;
       }
 
       const elapsed = now - startTime;
-
-      const days = Math.floor(elapsed / oneDayMs);
+      const totalDays = Math.floor(elapsed / oneDayMs);
       const hours = Math.floor((elapsed % oneDayMs) / (1000 * 60 * 60));
       const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
 
-      document.getElementById("countup").innerHTML = `
-        ${createCard(days, "Days")}
-        ${createCard(hours, "Hours")}
-        ${createCard(minutes, "Minutes")}
-        ${createCard(seconds, "Seconds")}
-      `;
+      checkMilestones(totalDays);
+
+      const years = Math.floor(totalDays / 365);
+      const months = Math.floor((totalDays % 365) / 30);
+      const days = (totalDays % 365) % 30;
+
+      let fields = [];
+
+      if (years >= 1) fields.push(createCard(years, "Years"));
+      if (totalDays >= 30) fields.push(createCard(months, "Months"));
+
+      fields.push(createCard(days, "Days"));
+      fields.push(createCard(hours, "Hours"));
+      fields.push(createCard(minutes, "Minutes"));
+      fields.push(createCard(seconds, "Seconds"));
+
+      const container = document.getElementById("countup");
+      container.className = 'count-container'; // reset
+
+      if (fields.length === 4) container.classList.add("four-fields");
+      else if (fields.length === 5) container.classList.add("five-fields");
+      else if (fields.length >= 6) container.classList.add("more-than-five");
+
+      container.innerHTML = fields.join("");
     }
 
     const timer = setInterval(updateCount, 1000);
